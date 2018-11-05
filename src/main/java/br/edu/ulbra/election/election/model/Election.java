@@ -2,44 +2,50 @@ package br.edu.ulbra.election.election.model;
 
 import javax.persistence.*;
 
+/*
+ * id integer identity primary key,
+  year integer(4) not null,
+  state_code varchar(5) not null,
+  description varchar(255) not null
+ */
 @Entity
 public class Election {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long code;
+	private Long id;
 
 	@Column(nullable = false)
-	private String name;
+	private String year;
 
-	@Column(nullable = false)
-	private String state_code;
+	@Column(nullable = false, name = "state_code")
+	private String stateCode;
 
 	@Column(nullable = false)
 	private String description;
 
-	public Long getCode() {
-		return code;
+	public Long getId() {
+		return id;
 	}
 
-	public void setCode(Long code) {
-		this.code = code;
+	public void setId(Long id) {
+		this.id = id;
 	}
 
-	public String getName() {
-		return name;
+	public String getYear() {
+		return year;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public void setYear(String year) {
+		this.year = year;
 	}
 
-	public String getState_code() {
-		return state_code;
+	public String getStateCode() {
+		return stateCode;
 	}
 
-	public void setState_code(String state_code) {
-		this.state_code = state_code;
+	public void setStateCode(String stateCode) {
+		this.stateCode = stateCode;
 	}
 
 	public String getDescription() {
