@@ -1,4 +1,4 @@
-package br.edu.ulbra.election.party.model;
+package br.edu.ulbra.election.election.model;
 
 import javax.persistence.*;
 
