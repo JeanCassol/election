@@ -16,7 +16,7 @@ public class Election {
 	private Long id;
 
 	@Column(nullable = false)
-	private String year;
+	private Integer year;
 
 	@Column(nullable = false, name = "state_code")
 	private String stateCode;
@@ -32,11 +32,11 @@ public class Election {
 		this.id = id;
 	}
 
-	public String getYear() {
+	public Integer getYear() {
 		return year;
 	}
 
-	public void setYear(String year) {
+	public void setYear(Integer year) {
 		this.year = year;
 	}
 
