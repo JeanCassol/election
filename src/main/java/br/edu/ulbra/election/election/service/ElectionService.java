@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import br.edu.ulbra.election.election.exception.GenericOutputException;
 import br.edu.ulbra.election.election.input.v1.ElectionInput;
 import br.edu.ulbra.election.election.model.Election;
+import br.edu.ulbra.election.election.model.Estados;
 import br.edu.ulbra.election.election.output.v1.ElectionOutput;
 import br.edu.ulbra.election.election.output.v1.GenericOutput;
 import br.edu.ulbra.election.election.repository.ElectionRepository;
@@ -24,7 +25,8 @@ public class ElectionService {
 
 	private static final String MESSAGE_INVALID_ID = "Invalid id";
 	private static final String MESSAGE_ELECTION_NOT_FOUND = "Election not found";
-
+	private static final String MESSAGE_ELECTION_YEAR ="Year of election must be greater than or equal to 2000 and less than 2200";
+	private static final String MESSAGE_ELECTION_STATECODE = "The state code must correspond to a valid state code in Brazil (or BR for national election)";
 	@Autowired
 	public ElectionService(ElectionRepository electionRepository, ModelMapper modelMapper) {
 		this.electionRepository = electionRepository;
@@ -114,5 +116,22 @@ public class ElectionService {
 		if (StringUtils.isBlank(electionInput.getStateCode())) {
 			throw new GenericOutputException("Invalid State Code");
 		}
+		
+		if (electionInput.getYear() < 2000 || electionInput.getYear() > 2200){
+            throw new GenericOutputException(MESSAGE_ELECTION_YEAR);
+        }
+		
+		if (asEstados(electionInput.getStateCode()) == null){
+            throw new GenericOutputException(MESSAGE_ELECTION_STATECODE);
+        }
+
+	}
+	
+	public Estados asEstados(String str) {
+	    for (Estados me : Estados.values()) {
+	        if (me.getCodigo().equalsIgnoreCase(str))
+	            return me;
+	    }
+	    return null;
 	}
 }
