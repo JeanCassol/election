@@ -1,48 +1,68 @@
 package br.edu.ulbra.election.election.service;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.modelmapper.ModelMapper;
+import br.edu.ulbra.election.election.exception.GenericOutputException;
+import br.edu.ulbra.election.election.input.v1.VoteInput;
+import br.edu.ulbra.election.election.model.Election;
+import br.edu.ulbra.election.election.model.Vote;
+import br.edu.ulbra.election.election.output.v1.GenericOutput;
+import br.edu.ulbra.election.election.repository.ElectionRepository;
+import br.edu.ulbra.election.election.repository.VoteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import br.edu.ulbra.election.election.input.v1.VoteInput;
-import br.edu.ulbra.election.election.model.Vote;
-import br.edu.ulbra.election.election.output.v1.ElectionOutput;
-import br.edu.ulbra.election.election.output.v1.GenericOutput;
-import br.edu.ulbra.election.election.repository.VoteRepository;
+import java.util.List;
 
 @Service
 public class VoteService {
-	private final VoteRepository voteRepository;
 
-	private final ModelMapper modelMapper;
+    private final VoteRepository voteRepository;
 
-	@Autowired
-	public VoteService(VoteRepository voteRepository, ModelMapper modelMapper) {
-		this.voteRepository = voteRepository;
-		this.modelMapper = modelMapper;
-	}
+    private final ElectionRepository electionRepository;
 
-	public List<GenericOutput> createMultiple(List<VoteInput> voteInput) {
-		List<GenericOutput> ElectionOutputList = new ArrayList<GenericOutput>();
-		for (VoteInput vote : voteInput) {
-			ElectionOutputList.add(create(vote));
-		}
+    @Autowired
+    public VoteService(VoteRepository voteRepository, ElectionRepository electionRepository){
+        this.voteRepository = voteRepository;
+        this.electionRepository = electionRepository;
+    }
 
-		return ElectionOutputList;
-	}
+    public GenericOutput electionVote(VoteInput voteInput){
 
-	public GenericOutput create(VoteInput voteInput) {
-		validateInput(voteInput, false);
-		Vote vote = modelMapper.map(voteInput, Vote.class);
-		vote = voteRepository.save(vote);
-		return new GenericOutput("voted");
-	}
+        Election election = validateInput(voteInput.getElectionId(), voteInput);
+        Vote vote = new Vote();
+        vote.setElection(election);
+        vote.setVoterId(voteInput.getVoterId());
 
-	private void validateInput(VoteInput voteInput, boolean isUpdate) {
-		//TODO - Não permitir mais de uma vez o voto
-	}
+        if (voteInput.getCandidateNumber() == null){
+            vote.setBlankVote(true);
+        } else {
+            vote.setBlankVote(false);
+        }
 
+        // TODO: Validate null candidate
+        vote.setNullVote(false);
+
+        voteRepository.save(vote);
+
+        return new GenericOutput("OK");
+    }
+
+    public GenericOutput multiple(List<VoteInput> voteInputList){
+        for (VoteInput voteInput : voteInputList){
+            this.electionVote(voteInput);
+        }
+        return new GenericOutput("OK");
+    }
+
+    public Election validateInput(Long electionId, VoteInput voteInput){
+        Election election = electionRepository.findById(electionId).orElse(null);
+        if (election == null){
+            throw new GenericOutputException("Invalid Election");
+        }
+        if (voteInput.getVoterId() == null){
+            throw new GenericOutputException("Invalid Voter");
+        }
+        // TODO: Validate voter
+
+        return election;
+    }
 }
