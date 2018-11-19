@@ -1,28 +1,33 @@
 package br.edu.ulbra.election.election.service;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import br.edu.ulbra.election.election.client.CandidateClientService;
 import br.edu.ulbra.election.election.exception.GenericOutputException;
 import br.edu.ulbra.election.election.input.v1.VoteInput;
 import br.edu.ulbra.election.election.model.Election;
 import br.edu.ulbra.election.election.model.Vote;
+import br.edu.ulbra.election.election.output.v1.CandidateOutput;
 import br.edu.ulbra.election.election.output.v1.GenericOutput;
 import br.edu.ulbra.election.election.repository.ElectionRepository;
 import br.edu.ulbra.election.election.repository.VoteRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
+import feign.FeignException;
 
 @Service
 public class VoteService {
 
     private final VoteRepository voteRepository;
-
     private final ElectionRepository electionRepository;
+    private final CandidateClientService candidateClientService;
 
     @Autowired
-    public VoteService(VoteRepository voteRepository, ElectionRepository electionRepository){
+    public VoteService(VoteRepository voteRepository, ElectionRepository electionRepository, CandidateClientService candidateClientService){
         this.voteRepository = voteRepository;
         this.electionRepository = electionRepository;
+        this.candidateClientService = candidateClientService;
     }
 
     public GenericOutput electionVote(VoteInput voteInput){
@@ -39,7 +44,25 @@ public class VoteService {
         }
 
         // TODO: Validate null candidate
-        vote.setNullVote(false);
+        if(!vote.getBlankVote())
+		{
+			try {
+
+				CandidateOutput candidateOutput = candidateClientService.getById(voteInput.getCandidateId());
+
+				if (candidateOutput == null)
+					vote.setNullVote(true);
+				else
+					vote.setNullVote(false);
+
+			} catch (FeignException e) {
+				if (e.status() == 500) {
+					throw new GenericOutputException("Invalid Candidate");
+				}
+			}
+        }
+        else
+        	vote.setNullVote(false);
 
         voteRepository.save(vote);
 

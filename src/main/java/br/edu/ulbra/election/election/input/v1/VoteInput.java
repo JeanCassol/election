@@ -6,34 +6,44 @@ import io.swagger.annotations.ApiModelProperty;
 @ApiModel(description = "Election Input Information")
 public class VoteInput {
 
-    @ApiModelProperty(example = "1", notes = "Election Unique Identification")
-    private Long electionId;
-    @ApiModelProperty(example = "2", notes = "Voter Unique Identifier")
-    private Long voterId;
-    @ApiModelProperty(example = "77100", notes = "Candidate Number")
-    private Long candidateNumber;
+	@ApiModelProperty(example = "1", notes = "Election Unique Identification")
+	private Long electionId;
+	@ApiModelProperty(example = "2", notes = "Voter Unique Identifier")
+	private Long voterId;
+	@ApiModelProperty(example = "77100", notes = "Candidate Number")
+	private Long candidateNumber;
+	@ApiModelProperty(example = "77100", notes = "Candidate Id")
+	private Long candidateId;
 
-    public Long getElectionId() {
-        return electionId;
-    }
+	public Long getCandidateId() {
+		return candidateId;
+	}
 
-    public void setElectionId(Long electionId) {
-        this.electionId = electionId;
-    }
+	public void setCandidateId(Long candidateId) {
+		this.candidateId = candidateId;
+	}
 
-    public Long getVoterId() {
-        return voterId;
-    }
+	public Long getElectionId() {
+		return electionId;
+	}
 
-    public void setVoterId(Long voterId) {
-        this.voterId = voterId;
-    }
+	public void setElectionId(Long electionId) {
+		this.electionId = electionId;
+	}
 
-    public Long getCandidateNumber() {
-        return candidateNumber;
-    }
+	public Long getVoterId() {
+		return voterId;
+	}
 
-    public void setCandidateNumber(Long candidateNumber) {
-        this.candidateNumber = candidateNumber;
-    }
+	public void setVoterId(Long voterId) {
+		this.voterId = voterId;
+	}
+
+	public Long getCandidateNumber() {
+		return candidateNumber;
+	}
+
+	public void setCandidateNumber(Long candidateNumber) {
+		this.candidateNumber = candidateNumber;
+	}
 }
