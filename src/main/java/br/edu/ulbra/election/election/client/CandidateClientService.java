@@ -1,5 +1,7 @@
 package br.edu.ulbra.election.election.client;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.stereotype.Service;
@@ -21,13 +23,31 @@ public class CandidateClientService {
 		return this.candidateClient.getById(id);
 	}
 
+	public CandidateOutput getByIdElection(Long electionId) {
+		return this.candidateClient.getByIdElection(electionId);
+	}
+	
+	public List<CandidateOutput> getAllByIdElection(Long electionId) {
+		return this.candidateClient.getAllByIdElection(electionId);
+	}
+	
+	public CandidateOutput getByIdParty(Long partyId) {
+		return this.candidateClient.getByIdParty(partyId);
+	}
+
 	@FeignClient(value = "candidate-service", url = "${url.candidate-service}")
 	private interface CandidateClient {
 
 		@GetMapping("/v1/candidate/{candidateId}")
 		CandidateOutput getById(@PathVariable(name = "candidateId") Long candidateId);
+
+		@GetMapping("/v1/candidate/election/{electionId}")
+		CandidateOutput getByIdElection(@PathVariable(name = "electionId") Long electionId);
 		
-		@GetMapping("/v1/candidate/{candidateId}")
-		CandidateOutput getByNumber(@PathVariable(name = "numberElection") String numberElection);
+		@GetMapping("/v1/candidate/all/election/{electionId}")
+		List<CandidateOutput> getAllByIdElection(@PathVariable(name = "electionId") Long electionId);
+		
+		@GetMapping("/v1/candidate/party/{partyId}")
+		CandidateOutput getByIdParty(@PathVariable(name = "partyId") Long partyId);
 	}
 }

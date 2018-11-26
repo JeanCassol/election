@@ -9,11 +9,13 @@ import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import br.edu.ulbra.election.election.client.CandidateClientService;
 import br.edu.ulbra.election.election.enums.StateCodes;
 import br.edu.ulbra.election.election.exception.GenericOutputException;
 import br.edu.ulbra.election.election.input.v1.ElectionInput;
 import br.edu.ulbra.election.election.model.Election;
 import br.edu.ulbra.election.election.model.Vote;
+import br.edu.ulbra.election.election.output.v1.CandidateOutput;
 import br.edu.ulbra.election.election.output.v1.ElectionOutput;
 import br.edu.ulbra.election.election.output.v1.GenericOutput;
 import br.edu.ulbra.election.election.repository.ElectionRepository;
@@ -25,13 +27,15 @@ public class ElectionService {
 	private final ElectionRepository electionRepository;
 	private final VoteRepository voteRepository;
 	private final ModelMapper modelMapper;
+	private final CandidateClientService candidateClientService;
 
 	@Autowired
 	public ElectionService(ElectionRepository electionRepository, ModelMapper modelMapper,
-			VoteRepository voteRepository) {
+			VoteRepository voteRepository, CandidateClientService candidateClientService) {
 		this.electionRepository = electionRepository;
 		this.modelMapper = modelMapper;
 		this.voteRepository = voteRepository;
+		this.candidateClientService = candidateClientService;
 	}
 
 	private static final String MESSAGE_INVALID_ID = "Invalid id";
@@ -70,13 +74,14 @@ public class ElectionService {
 		}
 		validateInput(electionInput);
 		validateDuplicate(electionInput, electionId);
+		validateReference(electionId);
 
 		Election election = electionRepository.findById(electionId).orElse(null);
 		if (election == null) {
 			throw new GenericOutputException(MESSAGE_ELECTION_NOT_FOUND);
 		}
 
-		Vote vote = voteRepository.findByElection_Id(electionId).orElse(null);
+		Vote vote = voteRepository.findFirstByElection_Id(electionId).orElse(null);
 		if (vote != null) {
 			throw new GenericOutputException("Election with votes");
 		}
@@ -92,22 +97,31 @@ public class ElectionService {
 		if (electionId == null) {
 			throw new GenericOutputException(MESSAGE_INVALID_ID);
 		}
-
+		validateReference(electionId);
+		
 		Election election = electionRepository.findById(electionId).orElse(null);
 		if (election == null) {
 			throw new GenericOutputException(MESSAGE_ELECTION_NOT_FOUND);
 		}
-
-		Vote vote = voteRepository.findByElection_Id(electionId).orElse(null);
-		if (vote != null) {
-			throw new GenericOutputException("Election with votes");
-		}
-
+		
+		
 		electionRepository.delete(election);
 
 		return new GenericOutput("Election deleted");
 	}
 
+	private void validateReference(Long electionId) {
+		Vote vote = voteRepository.findFirstByElection_Id(electionId).orElse(null);
+		if (vote != null) {
+			throw new GenericOutputException("Election with votes");
+		}
+
+		CandidateOutput candidateOutput = candidateClientService.getByIdElection(electionId);
+		if (candidateOutput != null) {
+			throw new GenericOutputException("Election with candidates");
+		}
+	}
+	
 	private void validateDuplicate(ElectionInput electionInput, Long id) {
 		Election election = electionRepository.findFirstByYearAndStateCodeAndDescription(electionInput.getYear(),
 				electionInput.getStateCode(), electionInput.getDescription());

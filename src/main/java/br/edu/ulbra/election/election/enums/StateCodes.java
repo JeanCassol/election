@@ -1,7 +1,8 @@
 package br.edu.ulbra.election.election.enums;
 
 public enum StateCodes {
-    AC,
+    BR,
+	AC,
     AL,
     AP,
     AM,
