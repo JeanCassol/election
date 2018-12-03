@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import br.edu.ulbra.election.election.client.CandidateClientService;
+import br.edu.ulbra.election.election.client.LoginClientService;
 import br.edu.ulbra.election.election.client.VoterClientService;
 import br.edu.ulbra.election.election.exception.GenericOutputException;
 import br.edu.ulbra.election.election.input.v1.VoteInput;
@@ -28,15 +29,18 @@ public class VoteService {
 	private final ElectionRepository electionRepository;
 	private final CandidateClientService candidateClientService;
 	private final VoterClientService voterClientService;
+	private final LoginClientService loginClientService;
 
 	@Autowired
 	public VoteService(ModelMapper modelMapper, VoteRepository voteRepository, ElectionRepository electionRepository,
-			CandidateClientService candidateClientService, VoterClientService voterClientService) {
+			CandidateClientService candidateClientService, VoterClientService voterClientService,
+			LoginClientService loginClientService) {
 		this.modelMapper = modelMapper;
 		this.voteRepository = voteRepository;
 		this.electionRepository = electionRepository;
 		this.candidateClientService = candidateClientService;
 		this.voterClientService = voterClientService;
+		this.loginClientService = loginClientService;
 	}
 
 	private static final String MESSAGE_INVALID_ID = "Invalid id";
@@ -73,9 +77,9 @@ public class VoteService {
 		return ret;
 	}
 
-	public GenericOutput electionVote(VoteInput voteInput) {
+	public GenericOutput electionVote(String token, VoteInput voteInput) {
 
-		Election election = validateInput(voteInput.getElectionId(), voteInput);
+		Election election = validateInput(token, voteInput.getElectionId(), voteInput);
 		Vote vote = new Vote();
 		vote.setElection(election);
 		vote.setVoterId(voteInput.getVoterId());
@@ -112,14 +116,14 @@ public class VoteService {
 		return new GenericOutput("OK");
 	}
 
-	public GenericOutput multiple(List<VoteInput> voteInputList) {
+	public GenericOutput multiple(String token, List<VoteInput> voteInputList) {
 		for (VoteInput voteInput : voteInputList) {
-			this.electionVote(voteInput);
+			this.electionVote(token, voteInput);
 		}
 		return new GenericOutput("OK");
 	}
 
-	public Election validateInput(Long electionId, VoteInput voteInput) {
+	public Election validateInput(String token, Long electionId, VoteInput voteInput) {
 		Election election = electionRepository.findById(electionId).orElse(null);
 		if (election == null) {
 			throw new GenericOutputException("Invalid Election");
@@ -137,6 +141,25 @@ public class VoteService {
 		if (voterOutput == null) {
 			throw new GenericOutputException("Invalid Voter");
 		}
+
+		try {
+
+			VoterOutput loginOutput = loginClientService.checkToken(token);
+
+			if (loginOutput == null)
+				throw new GenericOutputException("Invalid Token");
+
+			if (!voterOutput.getId().equals(loginOutput.getId())
+					|| !voterOutput.getEmail().equals(loginOutput.getEmail())) {
+				throw new GenericOutputException("Invalid Token");
+			}
+
+		} catch (FeignException e) {
+			if (e.status() == 500) {
+				throw new GenericOutputException("Invalid Candidate");
+			}
+		}
+
 		return election;
 	}
 }

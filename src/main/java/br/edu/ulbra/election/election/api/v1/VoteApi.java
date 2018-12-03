@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -39,14 +40,16 @@ public class VoteApi {
 		VoteOutput output = voteService.getByVoterId(voterId);
 		return output;
 	}
-	
+
 	@PutMapping("/")
-	public GenericOutput electionVote(@RequestBody VoteInput voteInput) {
-		return voteService.electionVote(voteInput);
+	public GenericOutput electionVote(@RequestHeader(value = "x-token") String token,
+			@RequestBody VoteInput voteInput) {
+		return voteService.electionVote(token, voteInput);
 	}
 
 	@PutMapping("/multiple")
-	public GenericOutput multipleElectionVote(@RequestBody List<VoteInput> voteInputList) {
-		return voteService.multiple(voteInputList);
+	public GenericOutput multipleElectionVote(@RequestHeader(value = "x-token") String token,
+			@RequestBody List<VoteInput> voteInputList) {
+		return voteService.multiple(token, voteInputList);
 	}
 }
